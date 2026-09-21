@@ -2,7 +2,7 @@ import {
   AUTO_GOAL_DECAY,
   AUTO_GOAL_RADIUS,
   AUTO_GOAL_TIME,
-  BALL_FRICTION,
+  BALL_DRAG,
   BALL_MAX_SPEED,
   BALL_RADIUS,
   CAT_BOUNCE,
@@ -13,7 +13,10 @@ import {
   DRIBBLE_OFFSET,
   GOAL_X0,
   GOAL_X1,
+  MAX_KICK,
+  MIN_KICK,
   PITCH,
+  ROLL_DECEL,
   TACKLE_STUN,
   TACKLE_TIME,
   TACKLE_RADIUS,
@@ -30,6 +33,34 @@ export type GameEvent =
   | { type: 'tackle' }
   | { type: 'wall' }
   | { type: 'goal'; team: TeamId; reason: 'shot' | 'auto' };
+
+/**
+ * How far a ball kicked at `speed` rolls before stopping, under the rolling
+ * model in updateBall. Closed form for dv/dt = -(a + b v).
+ */
+export function carryDistance(speed: number): number {
+  const a = ROLL_DECEL;
+  const b = BALL_DRAG;
+  return speed / b - (a / (b * b)) * Math.log(1 + (b * speed) / a);
+}
+
+/**
+ * The kick speed that rolls to a stop after `distance`, clamped to the kick
+ * range. Bisection, because the carry formula has no tidy inverse; a dozen
+ * iterations is plenty for gameplay precision.
+ */
+export function kickSpeedForDistance(distance: number): number {
+  let lo = MIN_KICK;
+  let hi = MAX_KICK;
+  if (carryDistance(hi) <= distance) return hi;
+  if (carryDistance(lo) >= distance) return lo;
+  for (let i = 0; i < 14; i++) {
+    const mid = (lo + hi) / 2;
+    if (carryDistance(mid) < distance) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
 
 /** Applies a kick to the ball and releases possession. */
 export function kickBall(state: MatchState, cat: Cat, dir: Vec, speed: number): void {
@@ -134,7 +165,11 @@ function updateBall(state: MatchState, dt: number, events: GameEvent[]): void {
   if (ball.owner) {
     const o = ball.owner;
     if (o.stun > 0) {
+      // While carried, vel is a frame displacement and can be enormous, so
+      // hand the loose ball the cat's real velocity instead.
       ball.owner = null;
+      ball.vel.x = o.vel.x;
+      ball.vel.y = o.vel.y;
     } else {
       // The ball is carried just in front of the nose.
       const tx = o.pos.x + Math.cos(o.facing) * DRIBBLE_OFFSET;
@@ -153,14 +188,16 @@ function updateBall(state: MatchState, dt: number, events: GameEvent[]): void {
   ball.pos.y += ball.vel.y * dt;
   ball.roll += Math.hypot(ball.vel.x, ball.vel.y) * dt * 0.5;
 
-  const decay = Math.exp(-BALL_FRICTION * dt);
-  ball.vel.x *= decay;
-  ball.vel.y *= decay;
-  if (Math.hypot(ball.vel.x, ball.vel.y) < 0.6) {
-    ball.vel.x = 0;
-    ball.vel.y = 0;
+  // Rolling resistance: a fixed deceleration plus a little drag. See
+  // ROLL_DECEL in constants.ts for why this shape rather than plain decay.
+  let sp = Math.hypot(ball.vel.x, ball.vel.y);
+  if (sp > 0) {
+    const next = Math.max(0, sp - (ROLL_DECEL + BALL_DRAG * sp) * dt);
+    const k = next / sp;
+    ball.vel.x *= k;
+    ball.vel.y *= k;
+    sp = next;
   }
-  const sp = Math.hypot(ball.vel.x, ball.vel.y);
   if (sp > BALL_MAX_SPEED) {
     ball.vel.x = (ball.vel.x / sp) * BALL_MAX_SPEED;
     ball.vel.y = (ball.vel.y / sp) * BALL_MAX_SPEED;

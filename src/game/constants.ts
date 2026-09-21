@@ -22,18 +22,24 @@ export const BALL_RADIUS = 1.6;
 export const DRIBBLE_OFFSET = CAT_RADIUS + BALL_RADIUS + 0.6;
 
 /**
- * Rolling resistance. A kick of speed v coasts roughly v / BALL_FRICTION
- * units before stopping, so with MAX_KICK the ball carries about 69 units on
- * a pitch 158 long. Shooting ranges below are set against that figure: a shot
- * taken from further out simply dies before it reaches the net.
+ * Ball deceleration, modelled as a rolling ball: a constant rolling
+ * resistance plus a small speed-proportional drag. The constant term is what
+ * matters. It makes carry grow with the square of kick speed, so a hard shot
+ * from midfield still reaches the goal while a soft pass stops after a few
+ * lengths. The old speed-proportional model made carry linear, and long
+ * shots died well short of the net.
+ *
+ * `carryDistance` and `kickSpeedForDistance` in physics.ts are the two
+ * directions of this model; use them rather than hand-tuned power formulas.
  */
-export const BALL_FRICTION = 1.38;
-export const BALL_MAX_SPEED = 120;
+export const ROLL_DECEL = 30;
+export const BALL_DRAG = 0.32;
+export const BALL_MAX_SPEED = 130;
 export const WALL_BOUNCE = 0.62;
 export const CAT_BOUNCE = 0.55;
 
-export const MIN_KICK = 28;
-export const MAX_KICK = 95;
+export const MIN_KICK = 36;
+export const MAX_KICK = 100;
 
 /** Ball must be slower than this (relative to the cat) to be collected. */
 export const COLLECT_SPEED = 72;
@@ -78,6 +84,13 @@ export const AUTO_GOAL_DECAY = 0.6;
  */
 export const HOLD_RANGE = 24;
 
+/**
+ * A pass is struck a little too hard or too soft at random. Overhit passes
+ * run past the receiver, which is the other way possession changes hands.
+ */
+export const PASS_POWER_MIN = 0.92;
+export const PASS_POWER_MAX = 1.18;
+
 export const GOALS_TO_WIN = 3;
 
 /** Longest useful drag, as a fraction of the screen's short side. */
@@ -100,6 +113,12 @@ export interface DifficultySpec {
   tackle: number;
   /** How far out the opponent will take a shot. Further is harder to defend. */
   shootRange: number;
+  /**
+   * Radians of random error on the player's passes. Passes are meant to go
+   * astray sometimes, otherwise possession is never really contested; on the
+   * gentle setting they are nearly always safe.
+   */
+  passSpread: number;
 }
 
 /**
@@ -111,9 +130,9 @@ export interface DifficultySpec {
  * these speeds in steps of about 0.03.
  */
 export const DIFFICULTIES: Record<Difficulty, DifficultySpec> = {
-  kitten: { label: 'Kitten', blurb: 'Nice and gentle', speed: 0.80, ponder: 1.10, spread: 0.26, tackle: 1.7, shootRange: 32 },
-  cat: { label: 'Cat', blurb: 'A fair match', speed: 0.90, ponder: 0.75, spread: 0.14, tackle: 1.1, shootRange: 42 },
-  bigcat: { label: 'Big Cat', blurb: 'Really tricky', speed: 0.94, ponder: 0.55, spread: 0.10, tackle: 1.1, shootRange: 48 },
+  kitten: { label: 'Kitten', blurb: 'Nice and gentle', speed: 0.80, ponder: 1.10, spread: 0.26, tackle: 1.7, shootRange: 36, passSpread: 0.04 },
+  cat: { label: 'Cat', blurb: 'A fair match', speed: 0.90, ponder: 0.75, spread: 0.14, tackle: 1.1, shootRange: 48, passSpread: 0.08 },
+  bigcat: { label: 'Big Cat', blurb: 'Really tricky', speed: 1.01, ponder: 0.55, spread: 0.10, tackle: 1.2, shootRange: 60, passSpread: 0.12 },
 };
 
 export const CAT_SPEED = 24.0;

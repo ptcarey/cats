@@ -25,6 +25,10 @@ function tick(now: number): void {
       entries.delete(entry);
       continue;
     }
+    // Screens are hidden with display:none, so their canvases have no
+    // offsetParent. Skipping them stops the title preview burning battery
+    // all through a match.
+    if (entry.canvas.offsetParent === null) continue;
     draw(entry);
   }
 

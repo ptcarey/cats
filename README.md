@@ -39,6 +39,16 @@ These are deliberate, and worth understanding before changing them.
   than resetting, so being briefly tackled does not waste the pressure.
 - **Ball carriers hold up short of the net** instead of dribbling the ball
   over the line, so a goal is always the result of a deliberate act.
+- **The ball rolls like a ball.** Deceleration is a constant rolling
+  resistance plus a little drag, so carry grows with the square of kick
+  speed. A hard shot from midfield reaches the net; a soft pass stops after a
+  few lengths. `carryDistance` and `kickSpeedForDistance` in physics.ts are
+  the two directions of that model, and passes are struck using the solver
+  rather than a hand-tuned formula.
+- **Passes can go astray.** A pass has a little angular error, scaled by
+  difficulty, and is randomly over- or under-hit, so some run loose or reach
+  an opponent. Possession has to be kept, not merely owned. On Kitten the
+  error is small enough that passes nearly always arrive.
 - **Reach is not tied to body size.** Collect and tackle distances are set
   generously and on purpose: they are an assist, so making the cats smaller
   on screen must not quietly make the game harder.

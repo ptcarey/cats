@@ -1,11 +1,15 @@
 import {
   AIM_TIME_SCALE,
+  DIFFICULTIES,
   MAX_DRAG_FRACTION,
   MAX_KICK,
   MIN_KICK,
+  PASS_POWER_MAX,
+  PASS_POWER_MIN,
   SNAP_ANGLE,
 } from './constants';
-import { angleDelta, clamp, dist } from './math';
+import { angleDelta, clamp, dist, randRange } from './math';
+import { kickSpeedForDistance } from './physics';
 import { toPitch, type Camera } from './camera';
 import { attackingGoal, openGoalTarget } from './state';
 import type { AimTarget, Cat, MatchState, Vec } from './types';
@@ -87,10 +91,20 @@ export class AimController {
       const dy = target.pos.y - from.y;
       const d = Math.hypot(dx, dy);
       if (d > 1e-3) {
+        let angle = Math.atan2(dy, dx);
+        let speed = speedFor(target, d, state.aim.power);
+        if (target.kind === 'teammate') {
+          // A pass is not a guarantee. A little angular error and a random
+          // over- or under-hit mean some run loose or reach an opponent,
+          // which keeps possession something to be won rather than owned.
+          const slop = DIFFICULTIES[state.difficulty].passSpread;
+          angle += randRange(-slop, slop);
+          speed *= randRange(PASS_POWER_MIN, PASS_POWER_MAX);
+        }
         this.onKick({
           cat: this.startedWith,
-          dir: { x: dx / d, y: dy / d },
-          speed: speedFor(target, d, state.aim.power),
+          dir: { x: Math.cos(angle), y: Math.sin(angle) },
+          speed,
           power: state.aim.power,
         });
       }
@@ -196,7 +210,8 @@ function snapTarget(state: MatchState, point: Vec): AimTarget {
 /** Passes are weighted to arrive at a teammate; shots and free kicks use the drag. */
 function speedFor(target: AimTarget, distance: number, power: number): number {
   if (target.kind === 'teammate') {
-    return clamp(distance * 1.75 + 14, MIN_KICK, MAX_KICK * 0.88);
+    // Roll a few units past the receiver rather than stopping dead on them.
+    return kickSpeedForDistance(distance + 6);
   }
   if (target.kind === 'goal') {
     return MAX_KICK;

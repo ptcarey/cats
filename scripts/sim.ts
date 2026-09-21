@@ -196,8 +196,13 @@ function sweep(target: Difficulty): void {
 `);
   console.log('speed  tackle | playerW rivalW  avg score    unfinished');
 
-  for (const speed of [0.82, 0.86, 0.9, 0.94, 0.98]) {
-    for (const tackle of [1.1, 1.4]) {
+  // Grids can be overridden: --speeds 0.98,1.0,1.02 --tackles 1.1,1.25
+  const grid = (flag: string, fallback: number[]): number[] => {
+    const i = process.argv.indexOf(flag);
+    return i === -1 ? fallback : process.argv[i + 1].split(',').map(Number);
+  };
+  for (const speed of grid('--speeds', [0.9, 0.94, 0.98, 1.02])) {
+    for (const tackle of grid('--tackles', [1.1, 1.4])) {
       spec.speed = speed;
       spec.tackle = tackle;
       const r = summarise(target, 'shooter');

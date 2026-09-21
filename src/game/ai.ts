@@ -7,13 +7,12 @@ import {
   GOAL_X1,
   HOLD_RANGE,
   MAX_KICK,
-  MIN_KICK,
   PITCH,
   SEPARATION_FORCE,
   SEPARATION_RADIUS,
 } from './constants';
 import { clamp, dist, lerp, norm, randRange } from './math';
-import { kickBall } from './physics';
+import { kickBall, kickSpeedForDistance } from './physics';
 import { attackingGoal, defendingGoal, openGoalTarget } from './state';
 import type { Cat, MatchState, TeamId, Vec } from './types';
 
@@ -236,7 +235,7 @@ function decideOpponentKick(state: MatchState, dt: number): void {
     const mate = bestPass(state, owner);
     if (mate) {
       owner.ponder = 0;
-      const power = clamp(dist(mate.pos, owner.pos) * 1.7 + 12, MIN_KICK, MAX_KICK * 0.9);
+      const power = kickSpeedForDistance(dist(mate.pos, owner.pos) + 6);
       fireAt(state, owner, mate.pos, power, spec.spread);
       return;
     }
@@ -284,6 +283,8 @@ function bestPass(state: MatchState, owner: Cat): Cat | null {
 function clearKeeperBall(state: MatchState, dt: number): void {
   const owner = state.ball.owner;
   if (!owner || !owner.isKeeper || state.phase !== 'play') return;
+  // The player's keeper waits while the player is lining up a kick.
+  if (owner.team === 0 && state.aim.active) return;
 
   owner.ponder += dt;
   if (owner.ponder < KEEPER_CLEAR_TIME) return;
@@ -294,5 +295,5 @@ function clearKeeperBall(state: MatchState, dt: number): void {
   const fwd = owner.team === 0 ? -1 : 1;
   const aim = mate ? mate.pos : { x: PITCH.w / 2, y: owner.pos.y + fwd * 60 };
   const angle = Math.atan2(aim.y - owner.pos.y, aim.x - owner.pos.x) + randRange(-0.12, 0.12);
-  kickBall(state, owner, { x: Math.cos(angle), y: Math.sin(angle) }, MAX_KICK * 0.8);
+  kickBall(state, owner, { x: Math.cos(angle), y: Math.sin(angle) }, kickSpeedForDistance(dist(aim, owner.pos) + 8));
 }
