@@ -1,0 +1,632 @@
+:root {
+  --grass: #1f7a43;
+  --grass-deep: #14351f;
+  --ink: #1b1f24;
+  --paper: #fffaf0;
+  --sun: #ffe14d;
+  --rival: #ff5d73;
+  --sky: #5bb8f0;
+  --radius: 20px;
+  --tap: 58px;
+  --font: system-ui, -apple-system, 'Segoe UI Rounded', 'SF Pro Rounded',
+    'Arial Rounded MT Bold', 'Trebuchet MS', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--grass-deep);
+  color: var(--ink);
+  font-family: var(--font);
+  /* A game should never select text or fire a magnifier on long press. */
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+#app {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
+  gap: 12px;
+  overflow: hidden;
+}
+
+.screen[hidden] {
+  display: none;
+}
+
+.screen--menu {
+  background: radial-gradient(120% 80% at 50% 0%, #2a9a58 0%, var(--grass) 45%, var(--grass-deep) 100%);
+  align-items: center;
+  overflow-y: auto;
+}
+
+/* ---------- Shared controls ---------- */
+
+.btn {
+  appearance: none;
+  border: none;
+  min-height: var(--tap);
+  padding: 0 26px;
+  border-radius: var(--radius);
+  font: inherit;
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  background: var(--paper);
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+  transition: transform 90ms ease, box-shadow 90ms ease;
+}
+
+.btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.28);
+}
+
+.btn--primary {
+  background: var(--sun);
+  font-size: 1.5rem;
+  min-height: 72px;
+  width: min(360px, 100%);
+}
+
+.btn--ghost {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  box-shadow: none;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+}
+
+.btn--wide {
+  width: min(360px, 100%);
+}
+
+.btn--icon {
+  min-height: 46px;
+  width: 46px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 1.25rem;
+  display: grid;
+  place-items: center;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  width: min(420px, 100%);
+}
+
+.title {
+  margin: 0;
+  text-align: center;
+  color: #fff;
+  font-size: clamp(2.4rem, 13vw, 3.6rem);
+  font-weight: 900;
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+  text-shadow: 0 5px 0 rgba(0, 0, 0, 0.32);
+}
+
+.title em {
+  display: block;
+  font-style: normal;
+  color: var(--sun);
+}
+
+.subtitle {
+  margin: 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.label {
+  color: rgba(255, 255, 255, 0.86);
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+  width: 100%;
+}
+
+/* ---------- Chips ---------- */
+
+.chips {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.chip {
+  appearance: none;
+  border: 2px solid rgba(255, 255, 255, 0.34);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-radius: 999px;
+  min-height: 48px;
+  padding: 0 18px;
+  font: inherit;
+  font-weight: 800;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.chip small {
+  display: block;
+  font-weight: 600;
+  font-size: 0.68rem;
+  opacity: 0.8;
+}
+
+.chip[aria-pressed='true'] {
+  background: var(--sun);
+  border-color: #fff;
+  color: var(--ink);
+}
+
+/* ---------- Title screen team strip ---------- */
+
+.team-strip {
+  width: min(420px, 100%);
+  background: rgba(0, 0, 0, 0.22);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.team-strip canvas {
+  width: 100%;
+  height: 104px;
+  display: block;
+}
+
+.team-strip__name {
+  color: #fff;
+  font-weight: 900;
+  font-size: 1.2rem;
+}
+
+/* ---------- Team builder ---------- */
+
+.builder {
+  background: linear-gradient(180deg, #2a9a58, var(--grass-deep));
+  gap: 10px;
+}
+
+.builder__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.builder__head h2 {
+  margin: 0;
+  flex: 1;
+  color: #fff;
+  font-size: 1.3rem;
+  font-weight: 900;
+}
+
+.field {
+  width: 100%;
+  min-height: 52px;
+  border-radius: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 800;
+  font-size: 1.05rem;
+  padding: 0 14px;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.roster {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
+.roster__slot {
+  appearance: none;
+  border: 3px solid transparent;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 16px;
+  padding: 6px 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.roster__slot[aria-pressed='true'] {
+  border-color: var(--sun);
+  background: rgba(0, 0, 0, 0.42);
+}
+
+.roster__slot canvas {
+  width: 100%;
+  height: 58px;
+  display: block;
+}
+
+.roster__slot span {
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.editor {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 6px;
+}
+
+.preview {
+  width: 100%;
+  height: 132px;
+  background: rgba(0, 0, 0, 0.22);
+  border-radius: var(--radius);
+  display: block;
+}
+
+.slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
+.slot {
+  appearance: none;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 14px;
+  min-height: 62px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font: inherit;
+  font-weight: 800;
+  font-size: 0.72rem;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.slot[aria-pressed='true'] {
+  border-color: var(--sun);
+}
+
+.slot__dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.35);
+}
+
+.slot--empty .slot__dot {
+  background: repeating-linear-gradient(45deg, #ffffff22 0 6px, #ffffff44 6px 12px);
+}
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+.swatch {
+  appearance: none;
+  border: 3px solid rgba(255, 255, 255, 0.45);
+  border-radius: 12px;
+  height: 46px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.swatch[aria-pressed='true'] {
+  border-color: #fff;
+  box-shadow: 0 0 0 3px var(--sun);
+}
+
+/* ---------- Match ---------- */
+
+.screen--match {
+  padding: 0;
+  background: var(--grass-deep);
+}
+
+#pitch {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+.hud {
+  position: absolute;
+  top: max(10px, env(safe-area-inset-top));
+  left: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.hud .btn {
+  pointer-events: auto;
+}
+
+.scoreboard {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 999px;
+  padding: 7px 12px;
+  color: #fff;
+  font-weight: 900;
+  backdrop-filter: blur(4px);
+}
+
+/* Each side takes an equal share and truncates, so a long team name can
+   never push the score onto a second line. */
+.scoreboard__side {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: 0.78rem;
+}
+
+.scoreboard__side:last-child {
+  justify-content: flex-end;
+}
+
+.scoreboard__side span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scoreboard__pip {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.scoreboard__score {
+  flex: none;
+  font-size: 1.4rem;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.banner {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  text-align: center;
+  padding: 20px;
+}
+
+.banner[hidden] {
+  display: none;
+}
+
+.banner__text {
+  color: #fff;
+  font-size: clamp(2.2rem, 15vw, 4.5rem);
+  font-weight: 900;
+  text-shadow: 0 6px 0 rgba(0, 0, 0, 0.4);
+  animation: pop 320ms cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+.banner__sub {
+  color: var(--sun);
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin-top: 6px;
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.hint {
+  position: absolute;
+  left: 50%;
+  bottom: max(22px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.58);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.95rem;
+  padding: 10px 18px;
+  border-radius: 999px;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+}
+
+.hint[hidden] {
+  display: none;
+}
+
+/* ---------- Overlay dialog ---------- */
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 24, 14, 0.82);
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  backdrop-filter: blur(3px);
+}
+
+.overlay[hidden] {
+  display: none;
+}
+
+.card {
+  background: var(--paper);
+  border-radius: 26px;
+  padding: 22px 18px;
+  width: min(380px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.card h2 {
+  margin: 0;
+  font-size: 1.9rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.card p {
+  margin: 0;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.card ol {
+  margin: 0;
+  padding-left: 22px;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.6;
+  align-self: stretch;
+}
+
+.card .btn {
+  width: 100%;
+}
+
+.final-score {
+  font-size: 2.6rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .banner__text {
+    animation: none;
+  }
+  .btn {
+    transition: none;
+  }
+}
+
+/* ---------- Cat name cards in the team builder ---------- */
+
+.namecard {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 16px;
+  padding: 6px 5px 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.namecard canvas {
+  width: 100%;
+  height: 54px;
+  display: block;
+}
+
+.namecard__role {
+  color: var(--sun);
+  font-weight: 800;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.field--mini {
+  min-height: 42px;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 0 6px;
+  border-radius: 10px;
+}

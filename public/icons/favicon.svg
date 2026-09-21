@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a9a58"/>
+      <stop offset="1" stop-color="#14351f"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#grass)"/>
+  <g transform="translate(25.599999999999994 25.599999999999994) scale(0.9)">
+    <!-- Ears -->
+    <path d="M108 168 L96 54 L204 118 Z" fill="#f0833a" stroke="#4a2a12" stroke-width="14" stroke-linejoin="round"/>
+    <path d="M404 168 L416 54 L308 118 Z" fill="#f0833a" stroke="#4a2a12" stroke-width="14" stroke-linejoin="round"/>
+    <path d="M124 150 L118 88 L182 126 Z" fill="#ff8fbe"/>
+    <path d="M388 150 L394 88 L330 126 Z" fill="#ff8fbe"/>
+    <!-- Head -->
+    <circle cx="256" cy="268" r="164" fill="#f0833a" stroke="#4a2a12" stroke-width="16"/>
+    <!-- Stripes -->
+    <path d="M256 104 v48 M212 112 v40 M300 112 v40" stroke="#d95f18" stroke-width="20" stroke-linecap="round"/>
+    <!-- Eyes -->
+    <ellipse cx="196" cy="252" rx="26" ry="34" fill="#22262b"/>
+    <ellipse cx="316" cy="252" rx="26" ry="34" fill="#22262b"/>
+    <circle cx="205" cy="240" r="9" fill="#ffffff"/>
+    <circle cx="325" cy="240" r="9" fill="#ffffff"/>
+    <!-- Nose and mouth -->
+    <path d="M238 318 L274 318 L256 338 Z" fill="#ff8fbe" stroke="#4a2a12" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M256 338 q-26 30 -52 8 M256 338 q26 30 52 8" fill="none" stroke="#4a2a12" stroke-width="12" stroke-linecap="round"/>
+    <!-- Whiskers -->
+    <path d="M150 300 h-56 M150 330 l-52 18 M362 300 h56 M362 330 l52 18"
+          stroke="#4a2a12" stroke-width="10" stroke-linecap="round"/>
+    <!-- Ball tucked in the corner -->
+    <circle cx="398" cy="404" r="74" fill="#fdfdfd" stroke="#2b2f36" stroke-width="14"/>
+    <path d="M398 360 l34 25 -13 40 -42 0 -13 -40 Z" fill="#2b2f36"/>
+  </g>
+</svg>
