@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Must match the Worker that already exists, or a deploy creates a second one.
+  "name": "cats",
+  "compatibility_date": "2026-09-21",
+  "observability": {
+    "enabled": true
+  },
+  // Keep the workers.dev address alive as a fallback for testing, separate
+  // from the real address below.
+  "workers_dev": true,
+  // The game is entirely static: no server code, no database, no accounts.
+  // Everything a player creates stays in their own browser.
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  },
+  "routes": [
+    {
+      "pattern": "cats.dusty.games",
+      "custom_domain": true
+    }
+  ]
+}
